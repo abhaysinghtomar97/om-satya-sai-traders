@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  RETAILER
+  FARMER
+}
+
+enum Category {
+  SEEDS
+  PESTICIDES
+  FERTILIZERS
+  EQUIPMENT
+}
+
+enum OrderStatus {
+  ORDER_PLACED
+  CONFIRMED
+  PACKED
+  DISPATCHED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  ONLINE_UPI
+  CREDIT_LEDGER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+// 1. USERS TABLE (Admin, Dukandar, Kisan)
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  phone         String    @unique
+  email         String?   @unique
+  password      String
+  role          Role      @default(FARMER)
+  isVerified    Boolean   @default(false)
+
+  // Sirf Retailers (Dukandaro) ke liye details
+  shopName      String?
+  gstNumber     String?
+  licenseNumber String?
+  licenseDocUrl String?
+
+  addresses     Address[]
+  orders        Order[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 2. DELIVERY ADDRESSES
+model Address {
+  id            String  @id @default(cuid())
+  userId        String
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  villageOrCity String
+  tehsil        String?
+  district      String
+  pincode       String
+  landmark      String?
+  isDefault     Boolean @default(false)
+}
+
+// 3. PRODUCTS TABLE (SEO + Crop Filters)
+model Product {
+  id                   String           @id @default(cuid())
+  name                 String
+  slug                 String           @unique
+  category             Category
+  brand                String
+  description          String           @db.Text
+  technicalComposition String?
+  crops                String[]
+  images               String[]
+
+  // Future Tally / GST Billing ke liye ready fields
+  hsnCode              String?
+  gstRate              Float            @default(0)
+
+  isActive             Boolean          @default(true)
+  variants             ProductVariant[]
+
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+// 4. PRODUCT VARIANTS (Dual Pricing: Farmer vs Retailer)
+model ProductVariant {
+  id             String      @id @default(cuid())
+  productId      String
+  product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  packSize       String
+  sku            String      @unique
+  mrp            Float
+  farmerPrice    Float
+  retailerPrice  Float
+  minRetailerQty Int         @default(1)
+  stock          Int         @default(0)
+
+  orderItems     OrderItem[]
+}
+
+// 5. ORDERS TABLE (End-to-End Pipeline)
+model Order {
+  id              String          @id @default(cuid())
+  orderNumber     String          @unique
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+
+  shippingAddress String          @db.Text
+  totalAmount     Float
+  paymentMethod   PaymentMethod   @default(COD)
+  paymentStatus   PaymentStatus   @default(PENDING)
+
+  currentStatus   OrderStatus     @default(ORDER_PLACED)
+
+  driverName      String?
+  driverPhone     String?
+  vehicleNumber   String?
+
+  items           OrderItem[]
+  timeline        OrderTimeline[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+// 6. ORDER ITEMS (Price Lock at Purchase Time)
+model OrderItem {
+  id           String         @id @default(cuid())
+  orderId      String
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId    String
+  variant      ProductVariant @relation(fields: [variantId], references: [id])
+
+  productName  String
+  packSize     String
+  quantity     Int
+  appliedPrice Float
+}
+
+// 7. END-TO-END PIPELINE TIMELINE LOGS
+model OrderTimeline {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+}
