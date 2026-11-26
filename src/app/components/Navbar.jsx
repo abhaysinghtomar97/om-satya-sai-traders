@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useLanguage } from '@/context/LanguageContext';
-
+import { useCart } from '@/context/CartContext';
 export default function Navbar() {
   const { data: session } = useSession();
   const { lang, switchLanguage, t } = useLanguage();
@@ -24,17 +24,15 @@ export default function Navbar() {
           <div className="flex items-center bg-green-950 rounded-full p-0.5 border border-green-600 text-xs font-semibold">
             <button
               onClick={() => switchLanguage('hi')}
-              className={`px-2.5 py-1 rounded-full transition ${
-                lang === 'hi' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
-              }`}
+              className={`px-2.5 py-1 rounded-full transition ${lang === 'hi' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
+                }`}
             >
               हिंदी
             </button>
             <button
               onClick={() => switchLanguage('en')}
-              className={`px-2.5 py-1 rounded-full transition ${
-                lang === 'en' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
-              }`}
+              className={`px-2.5 py-1 rounded-full transition ${lang === 'en' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
+                }`}
             >
               English
             </button>
@@ -43,17 +41,25 @@ export default function Navbar() {
           {/* Auth & Role Links */}
           {session ? (
             <div className="flex items-center gap-3 text-sm">
-              {session.user.role === 'ADMIN' && (
+              {session.user.role === 'ADMIN' ? (
                 <Link
                   href="/admin"
                   className="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-3 py-1.5 rounded-lg"
                 >
                   {t.adminDashboard}
                 </Link>
-              )}
-              <Link href="/my-orders" className="hover:underline">
+              ) : (
+              <> <Link href="/my-orders" className="hover:underline">
                 {t.myOrders}
               </Link>
+
+              <Link href="/cart">
+              🛒
+              </Link>
+
+              </>
+          )}
+
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
                 className="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-xs font-medium"

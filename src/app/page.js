@@ -4,11 +4,12 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useCart } from '@/context/CartContext';
 
 export default function HomePage() {
   const { data: session } = useSession();
   const { t, lang } = useLanguage();
-
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -74,6 +75,15 @@ export default function HomePage() {
                   🌾 {lang === 'hi' ? `स्वागत है, ${session.user.name}` : `Welcome, ${session.user.name}`}
                 </span>
               )}
+
+              <button
+                type="button"
+                onClick={() => addToCart(product, activeVariant)}
+                disabled={activeVariant.stock <= 0}
+                className="mt-4 w-full py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg transition disabled:bg-gray-300"
+              >
+                🛒 {activeVariant.stock > 0 ? t.addToCart : lang === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}
+              </button>
             </div>
           )}
         </div>
@@ -90,11 +100,10 @@ export default function HomePage() {
               <button
                 key={crop.key}
                 onClick={() => setSelectedCrop(selectedCrop === crop.key ? '' : crop.key)}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                  selectedCrop === crop.key
-                    ? 'bg-amber-500 text-black border-amber-600 font-bold'
-                    : 'bg-white text-gray-700 hover:bg-green-50'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition ${selectedCrop === crop.key
+                  ? 'bg-amber-500 text-black border-amber-600 font-bold'
+                  : 'bg-white text-gray-700 hover:bg-green-50'
+                  }`}
               >
                 {crop.label}
               </button>
@@ -112,11 +121,10 @@ export default function HomePage() {
               <button
                 key={cat.key}
                 onClick={() => setSelectedCategory(cat.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                  selectedCategory === cat.key
-                    ? 'bg-green-800 text-white'
-                    : 'bg-white border text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${selectedCategory === cat.key
+                  ? 'bg-green-800 text-white'
+                  : 'bg-white border text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 {cat.label}
               </button>
@@ -161,31 +169,40 @@ export default function HomePage() {
                     <p className="text-sm text-gray-600 mt-2 line-clamp-2">{product.description}</p>
 
                     {/* Pack Size Selector */}
-                    {product.variants.length > 0 && (
-                      <div className="mt-4">
-                        <label className="block text-xs font-medium text-gray-500 mb-1.5">
-                          {lang === 'hi' ? 'पैक आकार चुनें:' : 'Select Pack Size:'}
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {product.variants.map((v, idx) => (
-                            <button
-                              key={v.id}
-                              type="button"
-                              onClick={() =>
-                                setSelectedVariants({ ...selectedVariants, [product.id]: idx })
-                              }
-                              className={`px-3 py-1 text-xs font-semibold rounded border ${
-                                activeIdx === idx
-                                  ? 'border-green-700 bg-green-50 text-green-900'
-                                  : 'border-gray-200 text-gray-600'
-                              }`}
-                            >
-                              {v.packSize}
-                            </button>
-                          ))}
+                    {products.map((product) => {
+                      // 1. Define activeIdx and activeVariant INSIDE products.map
+                      const activeIdx = selectedVariants[product.id] || 0;
+                      const activeVariant = product.variants?.[activeIdx];
+
+                      return (
+                        <div key={product.id} className="bg-white rounded-xl border shadow-sm p-5 flex flex-col justify-between">
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">{product.name}</h3>
+                            {/* ... pack size buttons ... */}
+                          </div>
+
+                          {/* 2. Keep the price and Add to Cart button INSIDE {activeVariant && (...)} */}
+                          {activeVariant && (
+                            <div className="mt-5 pt-4 border-t">
+                              <div className="flex items-baseline justify-between">
+                                <span className="text-2xl font-extrabold text-green-800">
+                                  ₹{activeVariant.displayPrice}
+                                </span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => addToCart(product, activeVariant)}
+                                disabled={activeVariant.stock <= 0}
+                                className="mt-4 w-full py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg transition disabled:bg-gray-300"
+                              >
+                                🛒 {activeVariant.stock > 0 ? t.addToCart : lang === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
 
                   {/* Dual Pricing Display */}
