@@ -76,14 +76,7 @@ export default function HomePage() {
                 </span>
               )}
 
-              <button
-                type="button"
-                onClick={() => addToCart(product, activeVariant)}
-                disabled={activeVariant.stock <= 0}
-                className="mt-4 w-full py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg transition disabled:bg-gray-300"
-              >
-                🛒 {activeVariant.stock > 0 ? t.addToCart : lang === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}
-              </button>
+
             </div>
           )}
         </div>
@@ -101,8 +94,8 @@ export default function HomePage() {
                 key={crop.key}
                 onClick={() => setSelectedCrop(selectedCrop === crop.key ? '' : crop.key)}
                 className={`px-4 py-2 rounded-full text-sm font-medium border transition ${selectedCrop === crop.key
-                  ? 'bg-amber-500 text-black border-amber-600 font-bold'
-                  : 'bg-white text-gray-700 hover:bg-green-50'
+                    ? 'bg-amber-500 text-black border-amber-600 font-bold'
+                    : 'bg-white text-gray-700 hover:bg-green-50'
                   }`}
               >
                 {crop.label}
@@ -122,8 +115,8 @@ export default function HomePage() {
                 key={cat.key}
                 onClick={() => setSelectedCategory(cat.key)}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${selectedCategory === cat.key
-                  ? 'bg-green-800 text-white'
-                  : 'bg-white border text-gray-700 hover:bg-gray-100'
+                    ? 'bg-green-800 text-white'
+                    : 'bg-white border text-gray-700 hover:bg-gray-100'
                   }`}
               >
                 {cat.label}
@@ -146,95 +139,33 @@ export default function HomePage() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => {
+              // 1. Define activeIdx and activeVariant INSIDE products.map
               const activeIdx = selectedVariants[product.id] || 0;
-              const activeVariant = product.variants[activeIdx];
+              const activeVariant = product.variants?.[activeIdx];
 
               return (
-                <div
-                  key={product.id}
-                  className="bg-white rounded-xl border shadow-sm hover:shadow-md transition flex flex-col justify-between p-5"
-                >
+                <div key={product.id} className="bg-white rounded-xl border shadow-sm p-5 flex flex-col justify-between">
                   <div>
-                    <div className="flex justify-between items-start gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase px-2.5 py-0.5 rounded bg-green-100 text-green-800">
-                        {product.brand}
-                      </span>
-                      <span className="text-xs text-gray-500">{product.category}</span>
-                    </div>
-
                     <h3 className="text-lg font-bold text-gray-900">{product.name}</h3>
-                    {product.technicalComposition && (
-                      <p className="text-xs text-gray-500 mt-0.5">{product.technicalComposition}</p>
-                    )}
-                    <p className="text-sm text-gray-600 mt-2 line-clamp-2">{product.description}</p>
-
-                    {/* Pack Size Selector */}
-                    {products.map((product) => {
-                      // 1. Define activeIdx and activeVariant INSIDE products.map
-                      const activeIdx = selectedVariants[product.id] || 0;
-                      const activeVariant = product.variants?.[activeIdx];
-
-                      return (
-                        <div key={product.id} className="bg-white rounded-xl border shadow-sm p-5 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900">{product.name}</h3>
-                            {/* ... pack size buttons ... */}
-                          </div>
-
-                          {/* 2. Keep the price and Add to Cart button INSIDE {activeVariant && (...)} */}
-                          {activeVariant && (
-                            <div className="mt-5 pt-4 border-t">
-                              <div className="flex items-baseline justify-between">
-                                <span className="text-2xl font-extrabold text-green-800">
-                                  ₹{activeVariant.displayPrice}
-                                </span>
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={() => addToCart(product, activeVariant)}
-                                disabled={activeVariant.stock <= 0}
-                                className="mt-4 w-full py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg transition disabled:bg-gray-300"
-                              >
-                                🛒 {activeVariant.stock > 0 ? t.addToCart : lang === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {/* ... pack size buttons ... */}
                   </div>
 
-                  {/* Dual Pricing Display */}
+                  {/* 2. Keep the price and Add to Cart button INSIDE {activeVariant && (...)} */}
                   {activeVariant && (
                     <div className="mt-5 pt-4 border-t">
                       <div className="flex items-baseline justify-between">
-                        <div>
-                          <span className="text-xs font-semibold uppercase block text-gray-500">
-                            {activeVariant.isWholesale ? t.wholesalePrice : t.farmerPrice}
-                          </span>
-                          <span className="text-2xl font-extrabold text-green-800">
-                            ₹{activeVariant.displayPrice}
-                          </span>
-                          <span className="text-xs text-gray-400 line-through ml-2">
-                            {t.mrp}: ₹{activeVariant.mrp}
-                          </span>
-                        </div>
-
-                        {activeVariant.isWholesale && activeVariant.minOrderQty > 1 && (
-                          <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2 py-1 rounded">
-                            {t.minOrderQty}: {activeVariant.minOrderQty}
-                          </span>
-                        )}
+                        <span className="text-2xl font-extrabold text-green-800">
+                          ₹{activeVariant.displayPrice}
+                        </span>
                       </div>
 
                       <button
+                        type="button"
+                        onClick={() => addToCart(product, activeVariant)}
                         disabled={activeVariant.stock <= 0}
                         className="mt-4 w-full py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg transition disabled:bg-gray-300"
                       >
-                        {activeVariant.stock > 0
-                          ? t.addToCart
-                          : lang === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}
+                        🛒 {activeVariant.stock > 0 ? t.addToCart : lang === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}
                       </button>
                     </div>
                   )}
