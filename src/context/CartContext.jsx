@@ -24,8 +24,10 @@ export function CartProvider({ children }) {
 
     if (existingIndex > -1) {
       const updated = [...cart];
-      updated[existingIndex].quantity += 1;
-      saveCart(updated);
+      if (updated[existingIndex].quantity < variant.stock) {
+        updated[existingIndex].quantity += 1;
+        saveCart(updated);
+      }
     } else {
       saveCart([
         ...cart,

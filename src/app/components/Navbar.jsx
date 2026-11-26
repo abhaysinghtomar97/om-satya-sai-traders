@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
+
 export default function Navbar() {
   const { data: session } = useSession();
   const { lang, switchLanguage, t } = useLanguage();
+  const { cartCount } = useCart(); // 1. Get live cart count
 
   return (
     <nav className="bg-green-800 text-white shadow-md sticky top-0 z-50">
@@ -24,19 +26,39 @@ export default function Navbar() {
           <div className="flex items-center bg-green-950 rounded-full p-0.5 border border-green-600 text-xs font-semibold">
             <button
               onClick={() => switchLanguage('hi')}
-              className={`px-2.5 py-1 rounded-full transition ${lang === 'hi' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
-                }`}
+              className={`px-2.5 py-1 rounded-full transition ${
+                lang === 'hi' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
+              }`}
             >
               हिंदी
             </button>
             <button
               onClick={() => switchLanguage('en')}
-              className={`px-2.5 py-1 rounded-full transition ${lang === 'en' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
-                }`}
+              className={`px-2.5 py-1 rounded-full transition ${
+                lang === 'en' ? 'bg-amber-400 text-green-950' : 'text-gray-200 hover:text-white'
+              }`}
             >
               English
             </button>
           </div>
+
+          {/* Cart Button with Live Item Count (Hidden for Admin) */}
+          {session?.user?.role !== 'ADMIN' && (
+            <Link
+              href="/cart"
+              className="relative flex items-center gap-1.5 bg-green-900 hover:bg-green-950 border border-green-600 px-3 py-1.5 rounded-lg text-sm font-semibold transition"
+            >
+              <span>🛒</span>
+              <span className="hidden sm:inline">
+                {lang === 'hi' ? 'कार्ट' : 'Cart'}
+              </span>
+              {cartCount > 0 && (
+                <span className="ml-0.5 bg-amber-400 text-green-950 text-xs font-extrabold px-2 py-0.5 rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Auth & Role Links */}
           {session ? (
@@ -49,16 +71,10 @@ export default function Navbar() {
                   {t.adminDashboard}
                 </Link>
               ) : (
-              <> <Link href="/my-orders" className="hover:underline">
-                {t.myOrders}
-              </Link>
-
-              <Link href="/cart">
-              🛒
-              </Link>
-
-              </>
-          )}
+                <Link href="/my-orders" className="hover:underline">
+                  {t.myOrders}
+                </Link>
+              )}
 
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
